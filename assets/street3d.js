@@ -317,7 +317,7 @@
   };
 
   const faceTo = (p, dx, dz, dt) => {
-    const target = Math.atan2(dx, dz) + Math.PI; // 月球漫步：面朝行進方向的反方向
+    const target = Math.atan2(dx, dz) + Math.PI; // 倒著走：面朝行進方向的反方向
     let diff = target - p.root.rotation.y;
     diff = Math.atan2(Math.sin(diff), Math.cos(diff));
     p.root.rotation.y += diff * Math.min(1, dt * 8);
@@ -373,17 +373,16 @@
 
     if (!p.root.visible) return;
     if (moving) p.phase += dt * p.speed * 6.2;
-    // 月球漫步：雙腳貼地向後滑，輪流踮腳（前腳腳跟抬起），身體不上下彈跳、微微後仰
-    const sw = Math.sin(p.phase), a = moving ? 1 : 0;
-    const slide = 0.32 * a;
-    p.legL.rotation.x = sw * slide;
-    p.legR.rotation.x = -sw * slide;
-    p.legL.position.y = 0.84 + Math.max(0, Math.cos(p.phase)) * 0.05 * a;
-    p.legR.position.y = 0.84 + Math.max(0, -Math.cos(p.phase)) * 0.05 * a;
-    p.armL.rotation.x = -sw * 0.15 * a;
-    p.armR.rotation.x = p.bag.visible ? sw * 0.08 * a : sw * 0.15 * a;
-    p.body.rotation.x = -0.06 * a;
-    p.body.position.y = 0;
+    // 倒著走：臉朝行進方向的反方向，腳步反向邁出（與正常走路的擺動相反），並保留輕微上下起伏
+    const sw = -Math.sin(p.phase), a = moving ? 1 : 0;
+    p.legL.rotation.x = sw * 0.5 * a;
+    p.legR.rotation.x = -sw * 0.5 * a;
+    p.legL.position.y = 0.84;
+    p.legR.position.y = 0.84;
+    p.armL.rotation.x = -sw * 0.4 * a;
+    p.armR.rotation.x = p.bag.visible ? sw * 0.12 * a : sw * 0.4 * a;
+    p.body.rotation.x = -0.05 * a;
+    p.body.position.y = Math.abs(Math.cos(p.phase)) * 0.04 * a;
     p.root.position.set(p.x, 0, p.z);
   };
 
