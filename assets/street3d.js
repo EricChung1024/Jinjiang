@@ -241,26 +241,28 @@
     const body = new T.Group();
     root.add(body);
 
-    const torso = new T.Mesh(geo.torso, shirt); torso.position.y = 1.2; body.add(torso);
-    const head = new T.Mesh(geo.head, skin); head.position.y = 1.67; body.add(head);
-    const hairM = new T.Mesh(geo.hair, hair); hairM.position.set(0, 1.7, -0.01); hairM.rotation.x = -0.25; body.add(hairM);
+    // 上半身以髖關節（y=0.84）為軸心，才能前傾而雙腳留在地上
+    const upper = new T.Group(); upper.position.y = 0.84; body.add(upper);
+    const torso = new T.Mesh(geo.torso, shirt); torso.position.y = 1.2 - 0.84; upper.add(torso);
+    const head = new T.Mesh(geo.head, skin); head.position.y = 1.67 - 0.84; upper.add(head);
+    const hairM = new T.Mesh(geo.hair, hair); hairM.position.set(0, 1.7 - 0.84, -0.01); hairM.rotation.x = -0.25; upper.add(hairM);
 
     // 每個人都戴黑帽子（黑色禮帽：帽簷＋帽冠＋帽帶）
-    const hat = new T.Group(); hat.position.set(0, 1.8, 0); hat.rotation.x = -0.08;
+    const hat = new T.Group(); hat.position.set(0, 1.8 - 0.84, 0); hat.rotation.x = -0.08;
     const brim = new T.Mesh(geo.hatBrim, hatMat);
     const crown = new T.Mesh(geo.hatCrown, hatMat); crown.position.y = 0.085;
     const band = new T.Mesh(geo.hatBand, bandMat); band.position.y = 0.04;
-    hat.add(brim, crown, band); body.add(hat);
+    hat.add(brim, crown, band); upper.add(hat);
 
     // 手腳以關節為軸心擺動；half 為肢體中心到關節的距離
-    const limb = (g, m, x, y, half) => {
+    const limb = (g, m, x, y, half, parent = body) => {
       const pivot = new T.Group(); pivot.position.set(x, y, 0);
       const mesh = new T.Mesh(g, m); mesh.position.y = -half;
-      pivot.add(mesh); body.add(pivot);
+      pivot.add(mesh); parent.add(pivot);
       return pivot;
     };
     const legL = limb(geo.leg, pants, -0.1, 0.84, 0.42), legR = limb(geo.leg, pants, 0.1, 0.84, 0.42);
-    const armL = limb(geo.arm, shirt, -0.27, 1.45, 0.27), armR = limb(geo.arm, shirt, 0.27, 1.45, 0.27);
+    const armL = limb(geo.arm, shirt, -0.27, 1.45 - 0.84, 0.27, upper), armR = limb(geo.arm, shirt, 0.27, 1.45 - 0.84, 0.27, upper);
     const bag = new T.Mesh(geo.bag, bagMat); bag.position.set(0, -0.6, 0.02); bag.visible = false;
     armR.add(bag);
 
@@ -271,7 +273,7 @@
     const s = rand(0.88, 1.08);
     root.scale.set(s, s, s);
     scene.add(root);
-    return { root, body, legL, legR, armL, armR, bag, shadow, mats, phase: rand(0, 6.28) };
+    return { root, body, upper, legL, legR, armL, armR, bag, shadow, mats, phase: rand(0, 6.28) };
   };
 
   // ---------- 版面配置（依畫面寬度擺放店面） ----------
@@ -391,7 +393,7 @@
     const sw = Math.sin(p.phase);
     p.armL.rotation.x = -sw * 0.12 * a;
     p.armR.rotation.x = p.bag.visible ? sw * 0.06 * a : sw * 0.12 * a;
-    p.body.rotation.x = -0.08 * a;
+    p.upper.rotation.x = (Math.PI / 4) * a; // 上半身往前仰 45 度（以髖部為軸）
     p.body.position.y = 0;
     p.root.position.set(p.x, 0, p.z);
   };
