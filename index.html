@@ -490,7 +490,7 @@
   const SHIP_FEE = 100, FREE_OVER = 1200;
   // 訂單後端（Google Apps Script 網頁應用程式網址，結尾是 /exec）。
   // 留空 = 示範模式（不會真的送出訂單）。設定方式見 docs/google-sheets-setup.md
-  const ORDER_API_URL = '';
+  const ORDER_API_URL = 'https://script.google.com/macros/s/AKfycbwVHAUPL2My2RSG2BkNYWYm71Z4mMs_C1iHO7CCcRxr8doZKQ3MHHpsWDviAK-C3pzd/exec';
   const BY_ID = Object.fromEntries([...MENU, ...GIFTS].map(p => [p.id, p]));
 
   /* ---------- 工具 ---------- */

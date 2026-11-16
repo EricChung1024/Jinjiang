@@ -1,6 +1,6 @@
 /* 金匠鍋貼 Service Worker：讓網站可安裝、可離線開啟。
  * 改版時請更新 VERSION，舊快取會自動清除。 */
-const VERSION = 'jinjiang-v1';
+const VERSION = 'jinjiang-v2';
 const CORE = [
   './', './index.html', './manifest.webmanifest',
   './assets/styles.css', './assets/lucide.min.js', './assets/three.min.js', './assets/street3d.js',
