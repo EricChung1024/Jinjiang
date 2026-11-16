@@ -395,8 +395,10 @@
               <div class="flex justify-between"><dt>運費</dt><dd id="co-fee"></dd></div>
               <div class="flex justify-between pt-2 text-base font-black"><dt>總計</dt><dd id="co-total" class="text-ember-600"></dd></div>
             </dl>
-            <button type="submit" class="mt-5 w-full rounded-full bg-ember-500 py-3.5 font-bold text-white shadow-lg shadow-ember-500/30 transition hover:bg-ember-600">送出訂單</button>
-            <p class="mt-2 text-center text-[11px] text-wood-500">此為示範網站，不會產生真實訂單或扣款。</p>
+            <input type="text" id="co-hp" name="hp" tabindex="-1" autocomplete="off" aria-hidden="true" class="absolute -left-[9999px] h-0 w-0 opacity-0">
+            <p id="co-error" role="alert" class="mt-4 hidden rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"></p>
+            <button id="co-submit" type="submit" class="mt-5 w-full rounded-full bg-ember-500 py-3.5 font-bold text-white shadow-lg shadow-ember-500/30 transition hover:bg-ember-600 disabled:cursor-wait disabled:opacity-60">送出訂單</button>
+            <p id="co-notice" class="mt-2 text-center text-[11px] text-wood-500">此為示範網站，不會產生真實訂單或扣款。</p>
           </div>
         </div>
       </form>
@@ -405,7 +407,7 @@
     <div id="co-success-view" class="hidden px-6 py-14 text-center">
       <div class="mx-auto grid h-20 w-20 place-items-center rounded-full bg-green-500/15 text-green-600"><i data-lucide="check-circle-2" class="h-10 w-10"></i></div>
       <h2 class="mt-6 font-serif text-3xl font-black">訂單已建立！</h2>
-      <p class="mt-2 text-wood-600">感謝您的訂購，我們已開始為您準備美味。</p>
+      <p id="ok-msg" class="mt-2 text-wood-600">感謝您的訂購，我們已開始為您準備美味。</p>
       <div class="mx-auto mt-6 max-w-sm rounded-2xl bg-white p-5 text-left text-sm shadow-sm">
         <div class="flex justify-between py-1"><span class="text-wood-500">訂單編號</span><b id="ok-no"></b></div>
         <div class="flex justify-between py-1"><span class="text-wood-500">取餐方式</span><b id="ok-mode"></b></div>
@@ -486,6 +488,9 @@
     ['有素食選擇嗎？','有的。「香菇素水餃」、「酥炸脆皮豆腐」皆為全素；但門市使用同一設備烹製，若您對交叉接觸敏感，請事先告知。']
   ];
   const SHIP_FEE = 100, FREE_OVER = 1200;
+  // 訂單後端（Google Apps Script 網頁應用程式網址，結尾是 /exec）。
+  // 留空 = 示範模式（不會真的送出訂單）。設定方式見 docs/google-sheets-setup.md
+  const ORDER_API_URL = '';
   const BY_ID = Object.fromEntries([...MENU, ...GIFTS].map(p => [p.id, p]));
 
   /* ---------- 工具 ---------- */
@@ -724,20 +729,69 @@
       showErr('co-addr', ship && !addr)
     ];
     if (bad.some(Boolean)) { const first = form.querySelector('.border-red-500'); first && first.focus(); return; }
-    const total = subtotal() + fee();
+    const payload = {
+      mode: currentMode(), storeId: $('#co-store').value, name, phone, email, addr, note: $('#co-note').value.trim(), hp: $('#co-hp').value,
+      items: Object.entries(cart).map(([id, qty]) => ({ id, qty }))
+    };
+    if (!ORDER_API_URL) { showSuccess({ ...localOrderNo(), total: subtotal() + fee(), name, mode: payload.mode, storeId: payload.storeId }); return; }
+    submitOrder(payload, name);
+  });
+
+  function localOrderNo() {
     const d = new Date(), pad = n => String(n).padStart(2, '0');
-    $('#ok-no').textContent = `JJ${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}-${String(Math.floor(Math.random() * 9000) + 1000)}`;
-    $('#ok-mode').textContent = MODE_NAME[currentMode()];
+    return { orderNo: `JJ${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}-${String(Math.floor(Math.random() * 9000) + 1000)}` };
+  }
+
+  // 同一份訂單內容重試時沿用同一個 requestId，伺服器就不會重複建立訂單
+  let pending = null;
+  function requestIdFor(payload) {
+    const sig = JSON.stringify({ ...payload, hp: '' });
+    if (!pending || pending.sig !== sig) pending = { sig, id: (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2)) };
+    return pending.id;
+  }
+  function setBusy(on) {
+    const b = $('#co-submit'); b.disabled = on; b.textContent = on ? '送出中…' : '送出訂單';
+  }
+  function showFormError(msg) { const el = $('#co-error'); el.textContent = msg; el.classList.toggle('hidden', !msg); if (msg) el.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
+
+  async function submitOrder(payload, name) {
+    showFormError(''); setBusy(true);
+    const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), 25000);
+    try {
+      if (!navigator.onLine) throw new Error('offline');
+      const res = await fetch(ORDER_API_URL, {
+        method: 'POST', signal: ctl.signal,
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },   // 避開 CORS 預檢，GAS 才收得到
+        body: JSON.stringify({ ...payload, requestId: requestIdFor(payload) })
+      });
+      const r = await res.json();
+      if (!r.ok) { showFormError(r.error || '訂單送出失敗，請稍後再試。'); return; }
+      pending = null;
+      showSuccess({ orderNo: r.orderNo, total: r.total, name, mode: r.mode, storeId: payload.storeId });
+    } catch (err) {
+      showFormError(err.message === 'offline'
+        ? '目前沒有網路連線，請連上網路後再按「送出訂單」。'
+        : '連線逾時或失敗。您的購物車還在，請再按一次「送出訂單」（不會重複下單）；若仍失敗請來電訂購。');
+    } finally { clearTimeout(timer); setBusy(false); }
+  }
+
+  function showSuccess({ orderNo, total, name, mode, storeId }) {
+    const ship = mode === 'ship', store = STORES.find(x => x.id === storeId);
+    $('#ok-no').textContent = orderNo;
+    $('#ok-mode').textContent = MODE_NAME[mode];
     $('#ok-name').textContent = name;
     $('#ok-total').textContent = money(total);
-    const store = STORES.find(s => s.id === $('#co-store').value);
-    $('#ok-eta').textContent = ship ? '預計 2–3 個工作天以低溫宅配送達，出貨後將以簡訊通知。' : `預計 15–20 分鐘後可於「${store.name}」${currentMode() === 'dine' ? '入座享用' : '取餐'}。`;
+    $('#ok-eta').textContent = ship ? '預計 2–3 個工作天以低溫宅配送達，出貨後將以簡訊通知。' : `預計 15–20 分鐘後可於「${store.name}」${mode === 'dine' ? '入座享用' : '取餐'}。`;
     Object.keys(cart).forEach(k => delete cart[k]); updateCart();
-    form.reset(); paintMode();
+    form.reset(); paintMode(); showFormError('');
     $('#co-form-view').classList.add('hidden'); $('#co-success-view').classList.remove('hidden');
     modal.scrollTop = 0; $('#co-success-view').closest('div.overflow-y-auto').scrollTop = 0;
     icons();
-  });
+  }
+  if (ORDER_API_URL) {
+    $('#co-notice').textContent = '送出訂單後，店家會依您留的電話或 Email 與您確認。';
+    $('#ok-msg').textContent = '感謝您的訂購，店家確認後會與您聯繫。';
+  }
 
   /* ---------- 門市 ---------- */
   let activeStore = 'flag';
