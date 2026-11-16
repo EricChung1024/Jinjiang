@@ -226,13 +226,17 @@
     arm: new T.CapsuleGeometry(0.055, 0.42, 3, 8),
     bag: new T.BoxGeometry(0.2, 0.24, 0.1),
     shadow: new T.CircleGeometry(0.32, 20),
+    hatBrim: new T.CylinderGeometry(0.27, 0.27, 0.025, 20),
+    hatCrown: new T.CylinderGeometry(0.15, 0.17, 0.15, 18),
+    hatBand: new T.CylinderGeometry(0.172, 0.172, 0.035, 18),
   };
   const shadowMat = new T.MeshBasicMaterial({ color: 0x54392a, transparent: true, opacity: 0.18, depthWrite: false });
 
   const makePerson = () => {
     const shirt = mat(pick(SHIRTS)), pants = mat(pick(PANTS)), skin = mat(pick(SKIN)), hair = mat(pick(HAIR));
     const bagMat = mat(C.ember);
-    const mats = [shirt, pants, skin, hair, bagMat];
+    const hatMat = mat(0x111111), bandMat = mat(0x2a2a2a);
+    const mats = [shirt, pants, skin, hair, bagMat, hatMat, bandMat];
     const root = new T.Group();
     const body = new T.Group();
     root.add(body);
@@ -240,6 +244,13 @@
     const torso = new T.Mesh(geo.torso, shirt); torso.position.y = 1.2; body.add(torso);
     const head = new T.Mesh(geo.head, skin); head.position.y = 1.67; body.add(head);
     const hairM = new T.Mesh(geo.hair, hair); hairM.position.set(0, 1.7, -0.01); hairM.rotation.x = -0.25; body.add(hairM);
+
+    // 每個人都戴黑帽子（黑色禮帽：帽簷＋帽冠＋帽帶）
+    const hat = new T.Group(); hat.position.set(0, 1.8, 0); hat.rotation.x = -0.08;
+    const brim = new T.Mesh(geo.hatBrim, hatMat);
+    const crown = new T.Mesh(geo.hatCrown, hatMat); crown.position.y = 0.085;
+    const band = new T.Mesh(geo.hatBand, bandMat); band.position.y = 0.04;
+    hat.add(brim, crown, band); body.add(hat);
 
     // 手腳以關節為軸心擺動；half 為肢體中心到關節的距離
     const limb = (g, m, x, y, half) => {
@@ -306,7 +317,7 @@
   };
 
   const faceTo = (p, dx, dz, dt) => {
-    const target = Math.atan2(dx, dz);
+    const target = Math.atan2(dx, dz) + Math.PI; // 月球漫步：面朝行進方向的反方向
     let diff = target - p.root.rotation.y;
     diff = Math.atan2(Math.sin(diff), Math.cos(diff));
     p.root.rotation.y += diff * Math.min(1, dt * 8);
@@ -362,12 +373,17 @@
 
     if (!p.root.visible) return;
     if (moving) p.phase += dt * p.speed * 6.2;
-    const sw = Math.sin(p.phase);
-    p.legL.rotation.x = sw * 0.55;
-    p.legR.rotation.x = -sw * 0.55;
-    p.armL.rotation.x = -sw * 0.45;
-    p.armR.rotation.x = p.bag.visible ? sw * 0.15 : sw * 0.45;
-    p.body.position.y = Math.abs(Math.cos(p.phase)) * 0.045;
+    // 月球漫步：雙腳貼地向後滑，輪流踮腳（前腳腳跟抬起），身體不上下彈跳、微微後仰
+    const sw = Math.sin(p.phase), a = moving ? 1 : 0;
+    const slide = 0.32 * a;
+    p.legL.rotation.x = sw * slide;
+    p.legR.rotation.x = -sw * slide;
+    p.legL.position.y = 0.84 + Math.max(0, Math.cos(p.phase)) * 0.05 * a;
+    p.legR.position.y = 0.84 + Math.max(0, -Math.cos(p.phase)) * 0.05 * a;
+    p.armL.rotation.x = -sw * 0.15 * a;
+    p.armR.rotation.x = p.bag.visible ? sw * 0.08 * a : sw * 0.15 * a;
+    p.body.rotation.x = -0.06 * a;
+    p.body.position.y = 0;
     p.root.position.set(p.x, 0, p.z);
   };
 
