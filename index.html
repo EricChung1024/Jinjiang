@@ -32,24 +32,13 @@
   .toast-in{animation:toastIn .3s ease both}
   @keyframes toastIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
 
-  /* 首頁街景：以 SVG 與 CSS 呈現雙向步行的人潮。 */
-  .crowd-scene{position:absolute;inset:auto 0 0;height:110px;overflow:hidden;pointer-events:none;color:#54392a;background:linear-gradient(0deg,rgba(253,250,243,.85),transparent)}
-  .crowd-scene::after{content:"";position:absolute;bottom:8px;left:0;right:0;height:1px;background:rgba(84,57,42,.18)}
-  .crowd-person{position:absolute;left:-90px;bottom:9px;width:64px;height:94px;animation:crowd-cross var(--duration) linear infinite;animation-delay:var(--delay);opacity:var(--opacity,.8)}
-  .crowd-person svg{width:100%;height:100%;overflow:visible;transform:scale(var(--scale,1)) scaleX(var(--direction,1));transform-origin:50% 100%}
-  .crowd-person.reverse{animation-direction:reverse;--direction:-1}
-  .crowd-body{animation:crowd-bob .7s ease-in-out infinite alternate}
-  .crowd-limb{transform-origin:32px 51px;animation:crowd-stride .7s ease-in-out infinite alternate}
-  .crowd-limb.back{animation-direction:alternate-reverse}
-  .crowd-arm{transform-origin:32px 30px;animation:crowd-stride .7s ease-in-out infinite alternate-reverse}
-  .crowd-arm.back{animation-direction:alternate}
-  @keyframes crowd-cross{from{left:-90px}to{left:calc(100% + 90px)}}
-  @keyframes crowd-stride{from{transform:rotate(-22deg)}to{transform:rotate(22deg)}}
-  @keyframes crowd-bob{from{transform:translateY(0)}to{transform:translateY(-2px)}}
-  .crowd-toggle{position:absolute;right:16px;bottom:114px;display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid rgba(253,250,243,.35);border-radius:999px;background:rgba(43,29,20,.65);color:#fdfaf3;font-size:11px;cursor:pointer;backdrop-filter:blur(8px)}
+  /* 首頁 3D 街景：路人來來往往並走進店家（assets/street3d.js）。 */
+  .street3d{position:absolute;inset:auto 0 0;height:240px;pointer-events:none;background:linear-gradient(0deg,rgba(253,250,243,.95) 0%,rgba(253,250,243,.55) 45%,transparent 100%)}
+  .street3d canvas{display:block;width:100%;height:100%}
+  .crowd-toggle{position:absolute;right:16px;bottom:248px;z-index:2;display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid rgba(253,250,243,.35);border-radius:999px;background:rgba(43,29,20,.65);color:#fdfaf3;font-size:11px;cursor:pointer;backdrop-filter:blur(8px)}
   .crowd-toggle:hover{background:#54392a}
-  .crowd-paused .crowd-person,.crowd-paused .crowd-person *{animation-play-state:paused}
-  @media(max-width:640px){.crowd-scene{height:84px}.crowd-person{width:48px;height:72px}.crowd-toggle{bottom:88px;font-size:10px}.hero-content{padding-bottom:160px}}
+  @media(min-width:641px){.hero-content{padding-bottom:230px}}
+  @media(max-width:640px){.street3d{height:170px}.crowd-toggle{bottom:176px;font-size:10px}.hero-content{padding-bottom:190px}}
   :focus-visible{outline:2px solid #e8772e;outline-offset:2px}
 </style>
 </head>
@@ -139,128 +128,7 @@
       </a>
     </div>
   </div>
-  <div class="crowd-scene" aria-hidden="true">
-    <div class="crowd-person" style="--duration:23s;--delay:-3s;--scale:0.78;--opacity:0.55">
-      <svg viewBox="0 0 64 94" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <ellipse cx="32" cy="90" rx="21" ry="3" fill="#54392a" opacity=".15"/>
-        <g class="crowd-body">
-          <path class="crowd-limb back" d="M32 52 L28 70 L24 86 L18 87" stroke="#54392a" stroke-width="7" stroke-linecap="round"/>
-          <path class="crowd-arm back" d="M32 31 L42 44 L46 55" stroke="#8a634b" stroke-width="6" stroke-linecap="round"/>
-          <path d="M28 27 Q36 24 39 34 L40 54 Q32 58 24 53 L25 35 Z" fill="#8a634b"/>
-          <path class="crowd-limb" d="M32 53 L36 70 L40 86 L46 87" stroke="#2b1d14" stroke-width="7" stroke-linecap="round"/>
-          <path class="crowd-arm" d="M29 32 L22 45 L25 55" stroke="#c39976" stroke-width="6" stroke-linecap="round"/>
-          <rect x="29" y="20" width="7" height="9" rx="3" fill="#c39976"/>
-          <circle cx="33" cy="16" r="9" fill="#d5b08b"/>
-          <path d="M24 16 Q21 4 33 5 Q43 5 42 15 L37 12 L25 14" fill="#2b1d14"/>
-        </g>
-      </svg>
-    </div>
-    <div class="crowd-person reverse" style="--duration:29s;--delay:-15s;--scale:0.68;--opacity:0.55">
-      <svg viewBox="0 0 64 94" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <ellipse cx="32" cy="90" rx="21" ry="3" fill="#54392a" opacity=".15"/>
-        <g class="crowd-body">
-          <path class="crowd-limb back" d="M32 52 L28 70 L24 86 L18 87" stroke="#54392a" stroke-width="7" stroke-linecap="round"/>
-          <path class="crowd-arm back" d="M32 31 L42 44 L46 55" stroke="#8a634b" stroke-width="6" stroke-linecap="round"/>
-          <path d="M28 27 Q36 24 39 34 L40 54 Q32 58 24 53 L25 35 Z" fill="#54392a"/>
-          <path class="crowd-limb" d="M32 53 L36 70 L40 86 L46 87" stroke="#2b1d14" stroke-width="7" stroke-linecap="round"/>
-          <path class="crowd-arm" d="M29 32 L22 45 L25 55" stroke="#c39976" stroke-width="6" stroke-linecap="round"/>
-          <rect x="29" y="20" width="7" height="9" rx="3" fill="#c39976"/>
-          <circle cx="33" cy="16" r="9" fill="#d5b08b"/>
-          <path d="M24 16 Q21 4 33 5 Q43 5 42 15 L37 12 L25 14" fill="#2b1d14"/>
-        </g>
-      </svg>
-    </div>
-    <div class="crowd-person" style="--duration:20s;--delay:-9s;--scale:1;--opacity:0.85">
-      <svg viewBox="0 0 64 94" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <ellipse cx="32" cy="90" rx="21" ry="3" fill="#54392a" opacity=".15"/>
-        <g class="crowd-body">
-          <path class="crowd-limb back" d="M32 52 L28 70 L24 86 L18 87" stroke="#54392a" stroke-width="7" stroke-linecap="round"/>
-          <path class="crowd-arm back" d="M32 31 L42 44 L46 55" stroke="#8a634b" stroke-width="6" stroke-linecap="round"/>
-          <path d="M28 27 Q36 24 39 34 L40 54 Q32 58 24 53 L25 35 Z" fill="#cf5f17"/>
-          <path class="crowd-limb" d="M32 53 L36 70 L40 86 L46 87" stroke="#2b1d14" stroke-width="7" stroke-linecap="round"/>
-          <path class="crowd-arm" d="M29 32 L22 45 L25 55" stroke="#c39976" stroke-width="6" stroke-linecap="round"/>
-          <rect x="29" y="20" width="7" height="9" rx="3" fill="#c39976"/>
-          <circle cx="33" cy="16" r="9" fill="#d5b08b"/>
-          <path d="M24 16 Q21 4 33 5 Q43 5 42 15 L37 12 L25 14" fill="#2b1d14"/>
-        </g>
-      </svg>
-    </div>
-    <div class="crowd-person reverse" style="--duration:26s;--delay:-21s;--scale:0.85;--opacity:0.85">
-      <svg viewBox="0 0 64 94" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <ellipse cx="32" cy="90" rx="21" ry="3" fill="#54392a" opacity=".15"/>
-        <g class="crowd-body">
-          <path class="crowd-limb back" d="M32 52 L28 70 L24 86 L18 87" stroke="#54392a" stroke-width="7" stroke-linecap="round"/>
-          <path class="crowd-arm back" d="M32 31 L42 44 L46 55" stroke="#8a634b" stroke-width="6" stroke-linecap="round"/>
-          <path d="M28 27 Q36 24 39 34 L40 54 Q32 58 24 53 L25 35 Z" fill="#6b4a36"/>
-          <path class="crowd-limb" d="M32 53 L36 70 L40 86 L46 87" stroke="#2b1d14" stroke-width="7" stroke-linecap="round"/>
-          <path class="crowd-arm" d="M29 32 L22 45 L25 55" stroke="#c39976" stroke-width="6" stroke-linecap="round"/>
-          <rect x="29" y="20" width="7" height="9" rx="3" fill="#c39976"/>
-          <circle cx="33" cy="16" r="9" fill="#d5b08b"/>
-          <path d="M24 16 Q21 4 33 5 Q43 5 42 15 L37 12 L25 14" fill="#2b1d14"/>
-        </g>
-      </svg>
-    </div>
-    <div class="crowd-person" style="--duration:31s;--delay:-8s;--scale:0.7;--opacity:0.55">
-      <svg viewBox="0 0 64 94" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <ellipse cx="32" cy="90" rx="21" ry="3" fill="#54392a" opacity=".15"/>
-        <g class="crowd-body">
-          <path class="crowd-limb back" d="M32 52 L28 70 L24 86 L18 87" stroke="#54392a" stroke-width="7" stroke-linecap="round"/>
-          <path class="crowd-arm back" d="M32 31 L42 44 L46 55" stroke="#8a634b" stroke-width="6" stroke-linecap="round"/>
-          <path d="M28 27 Q36 24 39 34 L40 54 Q32 58 24 53 L25 35 Z" fill="#8a634b"/>
-          <path class="crowd-limb" d="M32 53 L36 70 L40 86 L46 87" stroke="#2b1d14" stroke-width="7" stroke-linecap="round"/>
-          <path class="crowd-arm" d="M29 32 L22 45 L25 55" stroke="#c39976" stroke-width="6" stroke-linecap="round"/>
-          <rect x="29" y="20" width="7" height="9" rx="3" fill="#c39976"/>
-          <circle cx="33" cy="16" r="9" fill="#d5b08b"/>
-          <path d="M24 16 Q21 4 33 5 Q43 5 42 15 L37 12 L25 14" fill="#2b1d14"/>
-        </g>
-      </svg>
-    </div>
-    <div class="crowd-person reverse" style="--duration:22s;--delay:-17s;--scale:0.95;--opacity:0.85">
-      <svg viewBox="0 0 64 94" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <ellipse cx="32" cy="90" rx="21" ry="3" fill="#54392a" opacity=".15"/>
-        <g class="crowd-body">
-          <path class="crowd-limb back" d="M32 52 L28 70 L24 86 L18 87" stroke="#54392a" stroke-width="7" stroke-linecap="round"/>
-          <path class="crowd-arm back" d="M32 31 L42 44 L46 55" stroke="#8a634b" stroke-width="6" stroke-linecap="round"/>
-          <path d="M28 27 Q36 24 39 34 L40 54 Q32 58 24 53 L25 35 Z" fill="#3b2a1e"/>
-          <path class="crowd-limb" d="M32 53 L36 70 L40 86 L46 87" stroke="#2b1d14" stroke-width="7" stroke-linecap="round"/>
-          <path class="crowd-arm" d="M29 32 L22 45 L25 55" stroke="#c39976" stroke-width="6" stroke-linecap="round"/>
-          <rect x="29" y="20" width="7" height="9" rx="3" fill="#c39976"/>
-          <circle cx="33" cy="16" r="9" fill="#d5b08b"/>
-          <path d="M24 16 Q21 4 33 5 Q43 5 42 15 L37 12 L25 14" fill="#2b1d14"/>
-        </g>
-      </svg>
-    </div>
-    <div class="crowd-person" style="--duration:28s;--delay:-2s;--scale:0.8;--opacity:0.85">
-      <svg viewBox="0 0 64 94" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <ellipse cx="32" cy="90" rx="21" ry="3" fill="#54392a" opacity=".15"/>
-        <g class="crowd-body">
-          <path class="crowd-limb back" d="M32 52 L28 70 L24 86 L18 87" stroke="#54392a" stroke-width="7" stroke-linecap="round"/>
-          <path class="crowd-arm back" d="M32 31 L42 44 L46 55" stroke="#8a634b" stroke-width="6" stroke-linecap="round"/>
-          <path d="M28 27 Q36 24 39 34 L40 54 Q32 58 24 53 L25 35 Z" fill="#a84a10"/>
-          <path class="crowd-limb" d="M32 53 L36 70 L40 86 L46 87" stroke="#2b1d14" stroke-width="7" stroke-linecap="round"/>
-          <path class="crowd-arm" d="M29 32 L22 45 L25 55" stroke="#c39976" stroke-width="6" stroke-linecap="round"/>
-          <rect x="29" y="20" width="7" height="9" rx="3" fill="#c39976"/>
-          <circle cx="33" cy="16" r="9" fill="#d5b08b"/>
-          <path d="M24 16 Q21 4 33 5 Q43 5 42 15 L37 12 L25 14" fill="#2b1d14"/>
-        </g>
-      </svg>
-    </div>
-    <div class="crowd-person reverse" style="--duration:25s;--delay:-12s;--scale:0.9;--opacity:0.85">
-      <svg viewBox="0 0 64 94" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <ellipse cx="32" cy="90" rx="21" ry="3" fill="#54392a" opacity=".15"/>
-        <g class="crowd-body">
-          <path class="crowd-limb back" d="M32 52 L28 70 L24 86 L18 87" stroke="#54392a" stroke-width="7" stroke-linecap="round"/>
-          <path class="crowd-arm back" d="M32 31 L42 44 L46 55" stroke="#8a634b" stroke-width="6" stroke-linecap="round"/>
-          <path d="M28 27 Q36 24 39 34 L40 54 Q32 58 24 53 L25 35 Z" fill="#6b4a36"/>
-          <path class="crowd-limb" d="M32 53 L36 70 L40 86 L46 87" stroke="#2b1d14" stroke-width="7" stroke-linecap="round"/>
-          <path class="crowd-arm" d="M29 32 L22 45 L25 55" stroke="#c39976" stroke-width="6" stroke-linecap="round"/>
-          <rect x="29" y="20" width="7" height="9" rx="3" fill="#c39976"/>
-          <circle cx="33" cy="16" r="9" fill="#d5b08b"/>
-          <path d="M24 16 Q21 4 33 5 Q43 5 42 15 L37 12 L25 14" fill="#2b1d14"/>
-        </g>
-      </svg>
-    </div>
-  </div>
+  <div class="street3d" id="street3d" aria-hidden="true"></div>
   <button type="button" class="crowd-toggle" id="crowd-toggle" aria-pressed="false">暫停人潮動畫</button>
 
 </section>
@@ -982,25 +850,7 @@
 })();
 </script>
 
-<script>
-(() => {
-  const hero = document.getElementById('hero');
-  const toggle = document.getElementById('crowd-toggle');
-  // 系統開啟「減少動態效果」時，人群仍顯示但先靜止，由使用者自行按播放。
-  let paused = window.matchMedia('(prefers-reduced-motion: reduce)').matches, visible = true;
-  const update = () => hero.classList.toggle('crowd-paused', paused || !visible || document.hidden);
-  const render = () => {
-    toggle.setAttribute('aria-pressed', String(paused));
-    toggle.textContent = paused ? '播放人潮動畫' : '暫停人潮動畫';
-    update();
-  };
-  toggle.addEventListener('click', () => { paused = !paused; render(); });
-  render();
-  if ('IntersectionObserver' in window) {
-    new IntersectionObserver(entries => { visible = entries[0].isIntersecting; update(); }).observe(hero);
-  }
-  document.addEventListener('visibilitychange', update);
-})();
-</script>
+<script src="./assets/three.min.js"></script>
+<script src="./assets/street3d.js"></script>
 </body>
 </html>
